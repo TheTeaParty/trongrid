@@ -21,6 +21,7 @@ const (
 
 type Client interface {
 	GetNowBlock(ctx context.Context) (*Block, error)
+	BroadcastHex(ctx context.Context, req *BroadcastHexRequest) (*BroadcastHexResponse, error)
 }
 
 type clientOptions struct {

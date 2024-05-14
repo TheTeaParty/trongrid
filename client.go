@@ -1,6 +1,7 @@
 package trongrid
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -11,10 +12,42 @@ type client struct {
 	options *clientOptions
 }
 
+func (c *client) BroadcastHex(ctx context.Context, broadcastHexRequest *BroadcastHexRequest) (*BroadcastHexResponse, error) {
+
+	endpoint := fmt.Sprintf("%s/wallet/broadcasthex", c.options.baseURL)
+
+	body, err := json.Marshal(broadcastHexRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(body))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.options.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	var broadcastHexResponse BroadcastHexResponse
+	err = json.NewDecoder(resp.Body).Decode(&broadcastHexResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	return &broadcastHexResponse, nil
+}
+
 func (c *client) GetNowBlock(ctx context.Context) (*Block, error) {
 
 	endpoint := fmt.Sprintf("%s/wallet/getnowblock", c.options.baseURL)
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, nil)
 	if err != nil {
 		return nil, err
 	}
