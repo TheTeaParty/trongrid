@@ -12,6 +12,38 @@ type client struct {
 	options *clientOptions
 }
 
+func (c *client) TriggerConstantContract(ctx context.Context, req *TriggerConstantContractRequest) (*TriggerConstantContractResponse, error) {
+
+	endpoint := fmt.Sprintf("%s/wallet/triggerconstantcontract", c.options.baseURL)
+
+	body, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(body))
+	if err != nil {
+		return nil, err
+	}
+
+	httpReq.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.options.httpClient.Do(httpReq)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	var triggerConstantContractResponse TriggerConstantContractResponse
+	err = json.NewDecoder(resp.Body).Decode(&triggerConstantContractResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	return &triggerConstantContractResponse, nil
+}
+
 func (c *client) BroadcastHex(ctx context.Context, broadcastHexRequest *BroadcastHexRequest) (*BroadcastHexResponse, error) {
 
 	endpoint := fmt.Sprintf("%s/wallet/broadcasthex", c.options.baseURL)
