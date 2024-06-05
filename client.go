@@ -28,6 +28,10 @@ func (c *client) TriggerConstantContract(ctx context.Context, req *TriggerConsta
 
 	httpReq.Header.Set("Content-Type", "application/json")
 
+	if c.options.apiKey != "" {
+		httpReq.Header.Set("TRON-PRO-API-KEY", c.options.apiKey)
+	}
+
 	resp, err := c.options.httpClient.Do(httpReq)
 	if err != nil {
 		return nil, err
@@ -60,6 +64,10 @@ func (c *client) BroadcastHex(ctx context.Context, broadcastHexRequest *Broadcas
 
 	req.Header.Set("Content-Type", "application/json")
 
+	if c.options.apiKey != "" {
+		req.Header.Set("TRON-PRO-API-KEY", c.options.apiKey)
+	}
+
 	resp, err := c.options.httpClient.Do(req)
 	if err != nil {
 		return nil, err
@@ -82,6 +90,10 @@ func (c *client) GetNowBlock(ctx context.Context) (*Block, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, nil)
 	if err != nil {
 		return nil, err
+	}
+
+	if c.options.apiKey != "" {
+		req.Header.Set("TRON-PRO-API-KEY", c.options.apiKey)
 	}
 
 	resp, err := c.options.httpClient.Do(req)

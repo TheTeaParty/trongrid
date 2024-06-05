@@ -29,6 +29,7 @@ type clientOptions struct {
 	network    Network
 	baseURL    string
 	httpClient *http.Client
+	apiKey     string
 }
 
 type ClientOption func(*clientOptions)
@@ -53,5 +54,11 @@ func WithNetwork(network Network) ClientOption {
 func WithHTTPClient(httpClient *http.Client) ClientOption {
 	return func(o *clientOptions) {
 		o.httpClient = httpClient
+	}
+}
+
+func WithAPIKey(apiKey string) ClientOption {
+	return func(o *clientOptions) {
+		o.apiKey = apiKey
 	}
 }
