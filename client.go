@@ -12,6 +12,34 @@ type client struct {
 	options *clientOptions
 }
 
+func (c *client) GetContractTransaction(ctx context.Context, address, contractType string) (*GetContractTransactionResponse, error) {
+
+	fullURL := fmt.Sprintf("%s/v1/accounts/%s/transactions/%s?only_confirmed=true", c.options.baseURL,
+		address, contractType)
+
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, fullURL, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	response, err := c.options.httpClient.Do(request)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		_ = response.Body.Close()
+	}()
+
+	var responseData GetContractTransactionResponse
+	err = json.NewDecoder(response.Body).Decode(&responseData)
+	if err != nil {
+		return nil, err
+	}
+
+	return &responseData, nil
+}
+
 func (c *client) TriggerConstantContract(ctx context.Context, req *TriggerConstantContractRequest) (*TriggerConstantContractResponse, error) {
 
 	endpoint := fmt.Sprintf("%s/wallet/triggerconstantcontract", c.options.baseURL)
