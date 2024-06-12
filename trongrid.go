@@ -24,6 +24,7 @@ type Client interface {
 	BroadcastHex(ctx context.Context, req *BroadcastHexRequest) (*BroadcastHexResponse, error)
 	TriggerConstantContract(ctx context.Context, req *TriggerConstantContractRequest) (*TriggerConstantContractResponse, error)
 	GetContractTransaction(ctx context.Context, address, contractType string) (*GetContractTransactionResponse, error)
+	GetTransactionInfoByID(ctx context.Context, txID string) (*GetTransactionInfoByIDResponse, error)
 }
 
 type clientOptions struct {
