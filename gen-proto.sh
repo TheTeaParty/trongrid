@@ -13,4 +13,7 @@ go run util/replacer/main.go $PROTO_DIR $OLD_PACKAGE $NEW_PACKAGE
 # Run protoc
 protoc ${INCLUDES} ${FLAGS} ${PROTO_DIR}/core/*.proto ${PROTO_DIR}/core/contract/*.proto ${PROTO_DIR}/api/*.proto
 
+# Fix the imports
+mv pkg/tronpb/core/contract/* pkg/tronpb/core/
+
 echo "Done"
