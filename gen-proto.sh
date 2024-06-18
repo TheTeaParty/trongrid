@@ -16,4 +16,7 @@ protoc ${INCLUDES} ${FLAGS} ${PROTO_DIR}/core/*.proto ${PROTO_DIR}/core/contract
 # Fix the imports
 mv pkg/tronpb/core/contract/* pkg/tronpb/core/
 
+# Restore the go_package option
+go run util/replacer/main.go $PROTO_DIR $NEW_PACKAGE $OLD_PACKAGE
+
 echo "Done"
