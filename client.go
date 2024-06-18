@@ -14,6 +14,13 @@ type client struct {
 
 func (c *client) GetTransactionInfoByID(ctx context.Context, txID string) (*GetTransactionInfoByIDResponse, error) {
 
+	if c.options.rateLimiter != nil {
+		err := c.options.rateLimiter.Wait(ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	endpoint := fmt.Sprintf("%s/wallet/gettransactioninfobyid", c.options.baseURL)
 
 	body, err := json.Marshal(map[string]string{"value": txID})
@@ -51,6 +58,13 @@ func (c *client) GetTransactionInfoByID(ctx context.Context, txID string) (*GetT
 
 func (c *client) GetContractTransaction(ctx context.Context, address, contractType string) (*GetContractTransactionResponse, error) {
 
+	if c.options.rateLimiter != nil {
+		err := c.options.rateLimiter.Wait(ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	fullURL := fmt.Sprintf("%s/v1/accounts/%s/transactions/%s?only_confirmed=true", c.options.baseURL,
 		address, contractType)
 
@@ -78,6 +92,13 @@ func (c *client) GetContractTransaction(ctx context.Context, address, contractTy
 }
 
 func (c *client) TriggerConstantContract(ctx context.Context, req *TriggerConstantContractRequest) (*TriggerConstantContractResponse, error) {
+
+	if c.options.rateLimiter != nil {
+		err := c.options.rateLimiter.Wait(ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	endpoint := fmt.Sprintf("%s/wallet/triggerconstantcontract", c.options.baseURL)
 
@@ -115,6 +136,13 @@ func (c *client) TriggerConstantContract(ctx context.Context, req *TriggerConsta
 
 func (c *client) BroadcastHex(ctx context.Context, broadcastHexRequest *BroadcastHexRequest) (*BroadcastHexResponse, error) {
 
+	if c.options.rateLimiter != nil {
+		err := c.options.rateLimiter.Wait(ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	endpoint := fmt.Sprintf("%s/wallet/broadcasthex", c.options.baseURL)
 
 	body, err := json.Marshal(broadcastHexRequest)
@@ -150,6 +178,13 @@ func (c *client) BroadcastHex(ctx context.Context, broadcastHexRequest *Broadcas
 }
 
 func (c *client) GetNowBlock(ctx context.Context) (*Block, error) {
+
+	if c.options.rateLimiter != nil {
+		err := c.options.rateLimiter.Wait(ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	endpoint := fmt.Sprintf("%s/wallet/getnowblock", c.options.baseURL)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, nil)

@@ -27,11 +27,16 @@ type Client interface {
 	GetTransactionInfoByID(ctx context.Context, txID string) (*GetTransactionInfoByIDResponse, error)
 }
 
+type RateLimiter interface {
+	Wait(ctx context.Context) error
+}
+
 type clientOptions struct {
-	network    Network
-	baseURL    string
-	httpClient *http.Client
-	apiKey     string
+	network     Network
+	baseURL     string
+	httpClient  *http.Client
+	apiKey      string
+	rateLimiter RateLimiter
 }
 
 type ClientOption func(*clientOptions)
@@ -62,5 +67,11 @@ func WithHTTPClient(httpClient *http.Client) ClientOption {
 func WithAPIKey(apiKey string) ClientOption {
 	return func(o *clientOptions) {
 		o.apiKey = apiKey
+	}
+}
+
+func WithRateLimiter(rateLimiter RateLimiter) ClientOption {
+	return func(o *clientOptions) {
+		o.rateLimiter = rateLimiter
 	}
 }
