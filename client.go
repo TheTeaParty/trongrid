@@ -6,10 +6,226 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 )
 
 type client struct {
 	options *clientOptions
+}
+
+func (c *client) GetBlockByNumber(ctx context.Context, number uint64) (*Block, error) {
+
+	if c.options.rateLimiter != nil {
+		err := c.options.rateLimiter.Wait(ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	endpoint := fmt.Sprintf("%s/wallet/getblockbynum", c.options.baseURL)
+
+	reqBody := map[string]interface{}{
+		"num": number,
+	}
+
+	body, err := json.Marshal(reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(body))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	if c.options.apiKey != "" {
+		req.Header.Set("TRON-PRO-API-KEY", c.options.apiKey)
+	}
+
+	resp, err := c.options.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	var block Block
+	err = json.NewDecoder(resp.Body).Decode(&block)
+	if err != nil {
+		return nil, err
+	}
+
+	return &block, nil
+}
+
+func (c *client) GetAccountBalance(ctx context.Context, address string, blockNumber uint64, blockHash string) (*AccountBalance, error) {
+
+	if c.options.rateLimiter != nil {
+		err := c.options.rateLimiter.Wait(ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	endpoint := fmt.Sprintf("%s/wallet/getaccountbalance", c.options.baseURL)
+
+	reqBody := map[string]interface{}{
+		"account_identifier": map[string]interface{}{
+			"address": address,
+		},
+		"block_identifier": map[string]interface{}{
+			"number": blockNumber,
+			"hash":   blockHash,
+		},
+		"visible": true,
+	}
+
+	body, err := json.Marshal(reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(body))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	if c.options.apiKey != "" {
+		req.Header.Set("TRON-PRO-API-KEY", c.options.apiKey)
+	}
+
+	resp, err := c.options.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	var accountBalance AccountBalance
+	err = json.NewDecoder(resp.Body).Decode(&accountBalance)
+	if err != nil {
+		return nil, err
+	}
+
+	return &accountBalance, nil
+}
+
+func (c *client) GetAccount(ctx context.Context, address string) (*Account, error) {
+
+	if c.options.rateLimiter != nil {
+		err := c.options.rateLimiter.Wait(ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	endpoint := fmt.Sprintf("%s/v1/accounts/%s", c.options.baseURL, address)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	if c.options.apiKey != "" {
+		req.Header.Set("TRON-PRO-API-KEY", c.options.apiKey)
+	}
+
+	resp, err := c.options.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	var accountRsp accountResponse
+	err = json.NewDecoder(resp.Body).Decode(&accountRsp)
+	if err != nil {
+		return nil, err
+	}
+
+	if !accountRsp.Success {
+		return nil, fmt.Errorf("success false in response")
+	}
+
+	if accountRsp.Data == nil || len(accountRsp.Data) == 0 {
+		return nil, ErrNoDataInResponse
+	}
+
+	return accountRsp.Data[0], nil
+}
+
+func (c *client) GetAccountTransactions(ctx context.Context, address string,
+	opts ...GetAccountTransactionsOption) (*GetAccountTransactionsCursor, error) {
+
+	options := &GetAccountTransactionsOptions{}
+
+	for _, opt := range opts {
+		opt(options)
+	}
+
+	urlStr := fmt.Sprintf("%s/v1/accounts/%s/transactions", c.options.baseURL, address)
+
+	u, err := url.Parse(urlStr)
+	if err != nil {
+		return nil, err
+	}
+
+	q := u.Query()
+
+	if options.Fingerprint != nil {
+		q.Set("fingerprint", *options.Fingerprint)
+	}
+
+	if options.MaxTimestamp != nil {
+		q.Set("max_timestamp", fmt.Sprintf("%d", *options.MaxTimestamp))
+	}
+
+	if options.MinTimestamp != nil {
+		q.Set("min_timestamp", fmt.Sprintf("%d", *options.MinTimestamp))
+	}
+
+	if options.Limit != nil {
+		q.Set("limit", fmt.Sprintf("%d", *options.Limit))
+	}
+
+	if options.OnlyConfirmed != nil {
+		q.Set("only_confirmed", fmt.Sprintf("%t", *options.OnlyConfirmed))
+	}
+
+	if options.OnlyFrom != nil {
+		q.Set("only_from", fmt.Sprintf("%t", *options.OnlyFrom))
+	}
+
+	if options.OnlyTo != nil {
+		q.Set("only_to", fmt.Sprintf("%t", *options.OnlyTo))
+	}
+
+	if options.OnlyUnconfirmed != nil {
+		q.Set("only_unconfirmed", fmt.Sprintf("%t", *options.OnlyUnconfirmed))
+	}
+
+	if options.SearchInternal != nil {
+		q.Set("search_internal", fmt.Sprintf("%t", *options.SearchInternal))
+	}
+
+	u.RawQuery = q.Encode()
+
+	cursor := &GetAccountTransactionsCursor{
+		options:      options,
+		client:       c,
+		url:          u.String(),
+		currentData:  make([]*Transaction, 0),
+		currentIndex: 0,
+		err:          nil,
+	}
+
+	return cursor, nil
 }
 
 func (c *client) GetTransactionInfoByID(ctx context.Context, txID string) (*GetTransactionInfoByIDResponse, error) {

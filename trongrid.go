@@ -2,7 +2,12 @@ package trongrid
 
 import (
 	"context"
+	"errors"
 	"net/http"
+)
+
+var (
+	ErrNoDataInResponse = errors.New("no data in response")
 )
 
 const (
@@ -21,6 +26,10 @@ const (
 
 type Client interface {
 	GetNowBlock(ctx context.Context) (*Block, error)
+	GetAccountBalance(ctx context.Context, address string, blockNumber uint64, blockHash string) (*AccountBalance, error)
+	GetBlockByNumber(ctx context.Context, number uint64) (*Block, error)
+	GetAccount(ctx context.Context, address string) (*Account, error)
+	GetAccountTransactions(ctx context.Context, address string, opts ...GetAccountTransactionsOption) (*GetAccountTransactionsCursor, error)
 	BroadcastHex(ctx context.Context, req *BroadcastHexRequest) (*BroadcastHexResponse, error)
 	TriggerConstantContract(ctx context.Context, req *TriggerConstantContractRequest) (*TriggerConstantContractResponse, error)
 	GetContractTransaction(ctx context.Context, address, contractType string) (*GetContractTransactionResponse, error)
