@@ -32,7 +32,7 @@ type Client interface {
 	GetAccountTransactions(ctx context.Context, address string, opts ...GetAccountTransactionsOption) (*GetAccountTransactionsCursor, error)
 	BroadcastHex(ctx context.Context, req *BroadcastHexRequest) (*BroadcastHexResponse, error)
 	TriggerConstantContract(ctx context.Context, req *TriggerConstantContractRequest) (*TriggerConstantContractResponse, error)
-	GetContractTransaction(ctx context.Context, address, contractType string) (*GetContractTransactionResponse, error)
+	GetContractTransaction(ctx context.Context, address, contractType string, opts ...GetContractTransactionOption) (*GetContractTransactionCursor, error)
 	GetTransactionInfoByID(ctx context.Context, txID string) (*GetTransactionInfoByIDResponse, error)
 }
 

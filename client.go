@@ -272,7 +272,7 @@ func (c *client) GetTransactionInfoByID(ctx context.Context, txID string) (*GetT
 
 }
 
-func (c *client) GetContractTransaction(ctx context.Context, address, contractType string) (*GetContractTransactionResponse, error) {
+func (c *client) GetContractTransaction(ctx context.Context, address, contractType string, opts ...GetContractTransactionOption) (*GetContractTransactionCursor, error) {
 
 	if c.options.rateLimiter != nil {
 		err := c.options.rateLimiter.Wait(ctx)
@@ -281,30 +281,76 @@ func (c *client) GetContractTransaction(ctx context.Context, address, contractTy
 		}
 	}
 
-	fullURL := fmt.Sprintf("%s/v1/accounts/%s/transactions/%s?only_confirmed=true", c.options.baseURL,
+	options := &GetContractTransactionOptions{}
+
+	for _, opt := range opts {
+		opt(options)
+	}
+
+	fullURLStr := fmt.Sprintf("%s/v1/accounts/%s/transactions/%s", c.options.baseURL,
 		address, contractType)
 
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, fullURL, nil)
+	u, err := url.Parse(fullURLStr)
 	if err != nil {
 		return nil, err
 	}
 
-	response, err := c.options.httpClient.Do(request)
-	if err != nil {
-		return nil, err
+	q := u.Query()
+
+	if options.onlyConfirmed != nil {
+		q.Set("only_confirmed", fmt.Sprintf("%t", *options.onlyConfirmed))
 	}
 
-	defer func() {
-		_ = response.Body.Close()
-	}()
-
-	var responseData GetContractTransactionResponse
-	err = json.NewDecoder(response.Body).Decode(&responseData)
-	if err != nil {
-		return nil, err
+	if options.onlyUnconfirmed != nil {
+		q.Set("only_unconfirmed", fmt.Sprintf("%t", *options.onlyUnconfirmed))
 	}
 
-	return &responseData, nil
+	if options.limit != nil {
+		q.Set("limit", fmt.Sprintf("%d", *options.limit))
+	}
+
+	if options.fingerprint != nil {
+		q.Set("fingerprint", *options.fingerprint)
+	}
+
+	if options.orderBy != nil {
+		q.Set("order_by", *options.orderBy)
+	}
+
+	if options.minTimestamp != nil {
+		q.Set("min_timestamp", fmt.Sprintf("%d", *options.minTimestamp))
+	}
+
+	if options.maxTimestamp != nil {
+		q.Set("max_timestamp", fmt.Sprintf("%d", *options.maxTimestamp))
+	}
+
+	if options.contractAddress != nil {
+		q.Set("contract_address", *options.contractAddress)
+	}
+
+	if options.onlyTo != nil {
+		q.Set("only_to", fmt.Sprintf("%t", *options.onlyTo))
+	}
+
+	if options.onlyFrom != nil {
+		q.Set("only_from", fmt.Sprintf("%t", *options.onlyFrom))
+	}
+
+	u.RawQuery = q.Encode()
+
+	cursor := &GetContractTransactionCursor{
+		contractType: contractType,
+		address:      address,
+		options:      c.options,
+		currentURL:   u.String(),
+		nextURL:      "",
+		err:          nil,
+		currentIndex: 0,
+		data:         make([]*ContractTransaction, 0),
+	}
+
+	return cursor, nil
 }
 
 func (c *client) TriggerConstantContract(ctx context.Context, req *TriggerConstantContractRequest) (*TriggerConstantContractResponse, error) {
