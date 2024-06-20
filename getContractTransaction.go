@@ -99,6 +99,10 @@ func (c *GetContractTransactionCursor) Next(ctx context.Context) bool {
 		return false
 	}
 
+	if c.currentIndex < len(c.data) {
+		return true
+	}
+
 	if c.currentURL == "" {
 		return false
 	}
@@ -158,7 +162,10 @@ func (c *GetContractTransactionCursor) Current() (*ContractTransaction, error) {
 		return nil, nil
 	}
 
-	return c.data[c.currentIndex], nil
+	data := c.data[c.currentIndex]
+	c.currentIndex++
+
+	return data, nil
 
 }
 
