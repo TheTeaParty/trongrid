@@ -41,11 +41,12 @@ type RateLimiter interface {
 }
 
 type clientOptions struct {
-	network     Network
-	baseURL     string
-	httpClient  *http.Client
-	apiKey      string
-	rateLimiter RateLimiter
+	network         Network
+	baseURL         string
+	fullNodeBaseURL string
+	httpClient      *http.Client
+	apiKey          string
+	rateLimiter     RateLimiter
 }
 
 type ClientOption func(*clientOptions)
@@ -63,6 +64,10 @@ func WithNetwork(network Network) ClientOption {
 			o.baseURL = nileTestnetBaseURL
 		default:
 			o.baseURL = mainnetBaseURL
+		}
+
+		if o.fullNodeBaseURL == "" {
+			o.fullNodeBaseURL = o.baseURL
 		}
 	}
 }
@@ -87,6 +92,6 @@ func WithRateLimiter(rateLimiter RateLimiter) ClientOption {
 
 func WithBaseURL(baseURL string) ClientOption {
 	return func(o *clientOptions) {
-		o.baseURL = baseURL
+		o.fullNodeBaseURL = baseURL
 	}
 }

@@ -22,7 +22,7 @@ func (c *client) GetBlockByNumber(ctx context.Context, number uint64) (*Block, e
 		}
 	}
 
-	endpoint := fmt.Sprintf("%s/wallet/getblockbynum", c.options.baseURL)
+	endpoint := fmt.Sprintf("%s/wallet/getblockbynum", c.options.fullNodeBaseURL)
 
 	reqBody := map[string]interface{}{
 		"num": number,
@@ -69,7 +69,7 @@ func (c *client) GetAccountBalance(ctx context.Context, address string, blockNum
 		}
 	}
 
-	endpoint := fmt.Sprintf("%s/wallet/getaccountbalance", c.options.baseURL)
+	endpoint := fmt.Sprintf("%s/wallet/getaccountbalance", c.options.fullNodeBaseURL)
 
 	reqBody := map[string]interface{}{
 		"account_identifier": map[string]interface{}{
@@ -174,7 +174,7 @@ func (c *client) GetTransactionInfoByID(ctx context.Context, txID string) (*GetT
 		}
 	}
 
-	endpoint := fmt.Sprintf("%s/wallet/gettransactioninfobyid", c.options.baseURL)
+	endpoint := fmt.Sprintf("%s/wallet/gettransactioninfobyid", c.options.fullNodeBaseURL)
 
 	body, err := json.Marshal(map[string]string{"value": txID})
 	if err != nil {
@@ -218,7 +218,7 @@ func (c *client) TriggerConstantContract(ctx context.Context, req *TriggerConsta
 		}
 	}
 
-	endpoint := fmt.Sprintf("%s/wallet/triggerconstantcontract", c.options.baseURL)
+	endpoint := fmt.Sprintf("%s/wallet/triggerconstantcontract", c.options.fullNodeBaseURL)
 
 	body, err := json.Marshal(req)
 	if err != nil {
@@ -261,7 +261,7 @@ func (c *client) BroadcastHex(ctx context.Context, broadcastHexRequest *Broadcas
 		}
 	}
 
-	endpoint := fmt.Sprintf("%s/wallet/broadcasthex", c.options.baseURL)
+	endpoint := fmt.Sprintf("%s/wallet/broadcasthex", c.options.fullNodeBaseURL)
 
 	body, err := json.Marshal(broadcastHexRequest)
 	if err != nil {
@@ -304,7 +304,7 @@ func (c *client) GetNowBlock(ctx context.Context) (*Block, error) {
 		}
 	}
 
-	endpoint := fmt.Sprintf("%s/wallet/getnowblock", c.options.baseURL)
+	endpoint := fmt.Sprintf("%s/wallet/getnowblock", c.options.fullNodeBaseURL)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, nil)
 	if err != nil {
 		return nil, err
