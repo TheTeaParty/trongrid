@@ -128,9 +128,11 @@ func (c *client) GetAccount(ctx context.Context, address string) (*Account, erro
 		}
 	}
 
-	endpoint := fmt.Sprintf("%s/v1/accounts/%s", c.options.baseURL, address)
+	endpoint := fmt.Sprintf("%s/wallet/getaccount", c.options.fullNodeBaseURL)
+	body := map[string]interface{}{"address": address, "visible": true}
+	jsonData, _ := json.Marshal(body)
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, err
 	}
@@ -148,21 +150,18 @@ func (c *client) GetAccount(ctx context.Context, address string) (*Account, erro
 
 	defer resp.Body.Close()
 
-	var accountRsp accountResponse
-	err = json.NewDecoder(resp.Body).Decode(&accountRsp)
+	rspBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
 
-	if !accountRsp.Success {
-		return nil, fmt.Errorf("success false in response")
+	var account Account
+	err = json.Unmarshal(rspBody, &account)
+	if err != nil {
+		return nil, err
 	}
 
-	if accountRsp.Data == nil || len(accountRsp.Data) == 0 {
-		return nil, ErrNoDataInResponse
-	}
-
-	return accountRsp.Data[0], nil
+	return &account, nil
 }
 
 func (c *client) GetTransactionInfoByID(ctx context.Context, txID string) (*GetTransactionInfoByIDResponse, error) {
