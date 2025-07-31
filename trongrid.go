@@ -54,10 +54,6 @@ func WithNetwork(network Network) ClientOption {
 	return func(o *clientOptions) {
 		o.network = network
 
-		if o.baseURL != "" {
-			return
-		}
-
 		switch network {
 		case NetworkMainnet:
 			o.baseURL = mainnetBaseURL

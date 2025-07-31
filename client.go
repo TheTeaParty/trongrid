@@ -321,10 +321,24 @@ func (c *client) GetNowBlock(ctx context.Context) (*Block, error) {
 
 	defer resp.Body.Close()
 
-	var block Block
-	err = json.NewDecoder(resp.Body).Decode(&block)
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("API request failed with status code: %d, response: %s", resp.StatusCode, string(body))
+	}
+
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
+	}
+
+	var block Block
+	err = json.Unmarshal(body, &block)
+	if err != nil {
+		return nil, err
+	}
+
+	if block.BlockHeader == nil || block.BlockHeader.RawData == nil {
+		return nil, fmt.Errorf("%w, response: %s", ErrNoDataInResponse, string(body))
 	}
 
 	return &block, nil
