@@ -54,6 +54,10 @@ func WithNetwork(network Network) ClientOption {
 	return func(o *clientOptions) {
 		o.network = network
 
+		if o.baseURL != "" {
+			return
+		}
+
 		switch network {
 		case NetworkMainnet:
 			o.baseURL = mainnetBaseURL
@@ -82,5 +86,11 @@ func WithAPIKey(apiKey string) ClientOption {
 func WithRateLimiter(rateLimiter RateLimiter) ClientOption {
 	return func(o *clientOptions) {
 		o.rateLimiter = rateLimiter
+	}
+}
+
+func WithBaseURL(baseURL string) ClientOption {
+	return func(o *clientOptions) {
+		o.baseURL = baseURL
 	}
 }
